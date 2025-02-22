@@ -1,4 +1,4 @@
 export interface ILogEvent<T = any> {
-  eventName: string;
+  name: string;
   args: T;
 }

@@ -14,10 +14,9 @@ import { ViemService } from "./viem.service";
 import Erc20Contract from "./contracts/ERC20Ownable.json";
 import Erc721Contract from "./contracts/ERC721Ownable.json";
 import ExchangeContract from "./contracts/Exchange.json";
-import type { Hash } from "viem";
+import type { Hash, Log } from "viem";
 import { createPublicClient, createWalletClient, defineChain, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import type { Log } from "viem/types/log";
 
 interface IExchangeItem {
   account: string;

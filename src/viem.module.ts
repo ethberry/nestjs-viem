@@ -4,14 +4,14 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { createConfigurableDynamicRootModule } from "@golevelup/nestjs-modules";
 import { DiscoveryModule } from "@golevelup/nestjs-discovery";
 
-import { viemRpcProvider } from "./providers";
+import { viemClientProvider } from "./providers";
 import { ViemService } from "./viem.service";
 import { IModuleOptions } from "./interfaces";
 import { MODULE_OPTIONS_PROVIDER } from "./viem.constants";
 
 @Module({
   imports: [ConfigModule, DiscoveryModule, ScheduleModule.forRoot()],
-  providers: [viemRpcProvider, Logger, ViemService],
+  providers: [viemClientProvider, Logger, ViemService],
   exports: [ViemService],
 })
 export class ViemModule

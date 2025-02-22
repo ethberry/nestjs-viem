@@ -1,5 +1,4 @@
 import { Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { MessageHandler } from "@nestjs/microservices";
 import { transformPatternToRoute } from "@nestjs/microservices/utils";
 import { PATTERN_METADATA } from "@nestjs/microservices/constants";
@@ -10,7 +9,7 @@ import { mergeAll, mergeMap } from "rxjs/operators";
 import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
 
 import { getPastEvents } from "./utils/get-past-events";
-import { VIEM_CLIENT, MODULE_OPTIONS_PROVIDER } from "./viem.constants";
+import { MODULE_OPTIONS_PROVIDER, VIEM_CLIENT } from "./viem.constants";
 import { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
 import { decodeEventLog, Hash, PublicClient } from "viem";
 
@@ -28,7 +27,6 @@ export class ViemService {
     @Inject(VIEM_CLIENT)
     protected readonly client: PublicClient,
     protected readonly discoveryService: DiscoveryService,
-    protected readonly configService: ConfigService,
     @Inject(MODULE_OPTIONS_PROVIDER)
     protected options: IModuleOptions,
     private schedulerRegistry: SchedulerRegistry,
@@ -114,31 +112,36 @@ export class ViemService {
           continue;
         }
 
-        const logDescription = decodeEventLog({
-          abi: entry.contractInterface,
-          data: log.data,
-          topics: log.topics,
-        });
+        try {
+          // throws DecodeLogDataMismatch
+          const logDescription = decodeEventLog({
+            abi: entry.contractInterface,
+            data: log.data,
+            topics: log.topics,
+          });
 
-        // LOG PROBLEMS IF ANY
-        if (!logDescription) {
+          this.loggerService.log(JSON.stringify(logDescription, null, "\t"), `${ViemService.name}-${this.instanceId}`);
+
+          const description = {
+            name: logDescription.eventName,
+            args: logDescription.args,
+          };
+
+          this.subject.next({
+            pattern: {
+              contractType: entry.contractType,
+              eventName: description.name,
+            },
+            description,
+            log,
+          });
+        } catch (e: unknown) {
           if (this.options.debug) {
             this.loggerService.log("CAN'T PARSE LOG", `${ViemService.name}-${this.instanceId}`);
             this.loggerService.log(JSON.stringify(log, null, "\t"), `${ViemService.name}-${this.instanceId}`);
+            this.loggerService.error(e); // DecodeLogDataMismatch
           }
-          continue;
         }
-
-        this.loggerService.log(JSON.stringify(logDescription, null, "\t"), `${ViemService.name}-${this.instanceId}`);
-
-        this.subject.next({
-          pattern: {
-            contractType: entry.contractType,
-            eventName: logDescription.eventName,
-          },
-          description: logDescription,
-          log,
-        });
       }
     }
   }
@@ -164,8 +167,8 @@ export class ViemService {
   }
 
   public async getLastBlock(): Promise<bigint> {
-    return await this.client.getBlockNumber().catch(err => {
-      this.loggerService.error(JSON.stringify(err, null, "\t"), `${ViemService.name}-${this.instanceId}`);
+    return await this.client.getBlockNumber().catch(e => {
+      this.loggerService.error(JSON.stringify(e, null, "\t"), `${ViemService.name}-${this.instanceId}`);
       return 0n;
     });
   }

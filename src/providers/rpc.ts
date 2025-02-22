@@ -6,7 +6,7 @@ import type { PublicClient } from "viem";
 import { VIEM_CLIENT } from "../viem.constants";
 import { getChain } from "../utils/chains";
 
-export const viemRpcProvider = {
+export const viemClientProvider = {
   provide: VIEM_CLIENT,
   inject: [ConfigService],
   useFactory: (configService: ConfigService): PublicClient => {
