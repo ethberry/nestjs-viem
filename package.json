@@ -24,7 +24,7 @@
     "@nestjs/schedule": "5.0.1",
     "@nestjs/testing": "11.0.11",
     "@types/jest": "29.5.14",
-    "@types/node": "22.13.10",
+    "@types/node": "22.13.11",
     "dotenv": "16.4.7",
     "husky": "9.1.7",
     "jest": "29.7.0",
@@ -36,7 +36,7 @@
     "rxjs": "7.8.2",
     "ts-jest": "29.2.6",
     "typescript": "5.8.2",
-    "viem": "2.23.10"
+    "viem": "2.23.13"
   },
   "engines": {
     "node": ">=22"
