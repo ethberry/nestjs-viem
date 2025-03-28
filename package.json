@@ -18,7 +18,7 @@
     "@ethberry/eslint-config": "5.0.5",
     "@nestjs/axios": "4.0.0",
     "@nestjs/common": "11.0.12",
-    "@nestjs/config": "4.0.1",
+    "@nestjs/config": "4.0.2",
     "@nestjs/core": "11.0.12",
     "@nestjs/microservices": "11.0.12",
     "@nestjs/schedule": "5.0.1",
