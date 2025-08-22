@@ -15,7 +15,7 @@
   },
   "description": "Viem transport for NestJS",
   "devDependencies": {
-    "@ethberry/eslint-config": "5.0.5",
+    "@ethberry/eslint-config": "5.0.8",
     "@nestjs/axios": "4.0.1",
     "@nestjs/common": "11.1.6",
     "@nestjs/config": "4.0.2",
