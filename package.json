@@ -11,7 +11,7 @@
     "@golevelup/nestjs-discovery": "4.0.3",
     "@golevelup/nestjs-modules": "0.8.0",
     "cron": "3.5.0",
-    "abitype": "1.0.8"
+    "abitype": "1.0.9"
   },
   "description": "Viem transport for NestJS",
   "devDependencies": {
@@ -36,7 +36,7 @@
     "rxjs": "7.8.2",
     "ts-jest": "29.4.1",
     "typescript": "5.9.2",
-    "viem": "2.33.3"
+    "viem": "2.34.0"
   },
   "engines": {
     "node": ">=22"
