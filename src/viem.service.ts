@@ -7,11 +7,11 @@ import { CronJob } from "cron";
 import { EMPTY, from, Observable, Subject } from "rxjs";
 import { mergeAll, mergeMap } from "rxjs/operators";
 import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
+import { decodeEventLog, Hash, PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events";
 import { MODULE_OPTIONS_PROVIDER, VIEM_CLIENT } from "./viem.constants";
 import { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
-import { decodeEventLog, Hash, PublicClient } from "viem";
 
 @Injectable()
 export class ViemService {

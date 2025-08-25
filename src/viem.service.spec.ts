@@ -5,18 +5,17 @@ import { Ctx, EventPattern, Payload } from "@nestjs/microservices";
 import { CronExpression } from "@nestjs/schedule";
 import { config } from "dotenv";
 import { Abi } from "abitype";
+import type { Hash, Log } from "viem";
+import { createPublicClient, createWalletClient, defineChain, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 import { patchBigInt, waitForConfirmation } from "./utils";
 import type { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
 import { ViemModule } from "./viem.module";
 import { ViemService } from "./viem.service";
-
 import Erc20Contract from "./contracts/ERC20Ownable.json";
 import Erc721Contract from "./contracts/ERC721Ownable.json";
 import ExchangeContract from "./contracts/Exchange.json";
-import type { Hash, Log } from "viem";
-import { createPublicClient, createWalletClient, defineChain, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 
 interface IExchangeItem {
   account: string;
@@ -360,6 +359,6 @@ describe("ViemServer", function () {
 
     await waitForConfirmation(publicClient, ~~process.env.LATENCY + 2);
 
-    expect(logSpyContract).toBeCalledTimes(10);
+    expect(logSpyContract).toHaveBeenCalledTimes(10);
   });
 });

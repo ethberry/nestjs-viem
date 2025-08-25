@@ -1,5 +1,4 @@
 import { ConfigService } from "@nestjs/config";
-
 import { createPublicClient, http } from "viem";
 import type { PublicClient } from "viem";
 
