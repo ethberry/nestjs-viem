@@ -7,7 +7,7 @@
       "matchUpdateTypes": ["minor", "patch"]
     },
     {
-      "allowedVersions": "<=3.5.0",
+      "allowedVersions": "<=4.3.5",
       "matchPackageNames": ["cron"]
     }
   ]
