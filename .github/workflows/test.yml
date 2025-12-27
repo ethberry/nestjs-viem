@@ -59,7 +59,7 @@ jobs:
           docker ps -a  # Показывает все контейнеры
           docker inspect besu | jq '.[0].State'
           docker inspect explorer | jq '.[0].State'
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v6
         name: Use Node.js ${{ matrix.node-version }}
         with:
           node-version: ${{ matrix.node-version }}
