@@ -10,8 +10,9 @@ import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-di
 import { decodeEventLog, Hash, PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events";
-import { MODULE_OPTIONS_PROVIDER, VIEM_CLIENT } from "./viem.constants";
-import { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
+import { VIEM_CLIENT } from "./viem.constants";
+import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition";
+import { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
 
 @Injectable()
 export class ViemService {
@@ -27,9 +28,9 @@ export class ViemService {
     @Inject(VIEM_CLIENT)
     protected readonly client: PublicClient,
     protected readonly discoveryService: DiscoveryService,
-    @Inject(MODULE_OPTIONS_PROVIDER)
-    protected options: IModuleOptions,
-    private schedulerRegistry: SchedulerRegistry,
+    @Inject(MODULE_OPTIONS_TOKEN)
+    protected options: IViemModuleOptions,
+    protected schedulerRegistry: SchedulerRegistry,
   ) {
     this.subject
       .pipe(mergeMap(({ pattern, description, log }) => from(this.call(pattern, description, log)).pipe(mergeAll()), 1))

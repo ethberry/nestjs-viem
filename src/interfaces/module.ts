@@ -1,6 +1,6 @@
 import { CronExpression } from "@nestjs/schedule";
 
-export interface IModuleOptions {
+export interface IViemModuleOptions {
   fromBlock: bigint;
   latency: bigint;
   debug: boolean;

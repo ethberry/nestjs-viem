@@ -10,7 +10,7 @@ import { createPublicClient, createWalletClient, defineChain, http } from "viem"
 import { privateKeyToAccount } from "viem/accounts";
 
 import { patchBigInt, waitForConfirmation } from "./utils";
-import type { IContractOptions, ILogEvent, IModuleOptions } from "./interfaces";
+import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
 import { ViemModule } from "./viem.module";
 import { ViemService } from "./viem.service";
 import Erc20Contract from "./contracts/ERC20Ownable.json";
@@ -178,7 +178,23 @@ class TestViemController {
 }
 
 @Module({
-  imports: [ViemModule.deferred()],
+  imports: [
+    ViemModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService): IViemModuleOptions => {
+        const latency = ~~configService.get<string>("LATENCY", "1");
+        const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
+        return {
+          latency: BigInt(latency),
+          fromBlock: BigInt(fromBlock),
+          debug: true,
+          chunkSize: 100,
+          cron: CronExpression.EVERY_SECOND,
+        };
+      },
+    }),
+  ],
   providers: [TestViemService],
   controllers: [TestViemController],
   exports: [TestViemService],
@@ -198,21 +214,6 @@ describe("ViemServer", function () {
       imports: [
         ConfigModule.forRoot({
           envFilePath: `.env`,
-        }),
-        ViemModule.forRootAsync(ViemModule, {
-          imports: [ConfigModule],
-          inject: [ConfigService],
-          useFactory: async (configService: ConfigService): Promise<IModuleOptions> => {
-            const latency = ~~configService.get<string>("LATENCY", "1");
-            const fromBlock = ~~configService.get<string>("STARTING_BLOCK", "0");
-            return Promise.resolve({
-              latency: BigInt(latency),
-              fromBlock: BigInt(fromBlock),
-              debug: true,
-              chunkSize: 100,
-              cron: CronExpression.EVERY_SECOND,
-            });
-          },
         }),
         TestViemModule,
       ],

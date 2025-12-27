@@ -9,8 +9,6 @@ export const viemAccountProvider = {
   inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const privateKey = configService.get<Hash>("PRIVATE_KEY", "0x");
-    const account = privateKeyToAccount(privateKey);
-
-    return account;
+    return privateKeyToAccount(privateKey);
   },
 };
