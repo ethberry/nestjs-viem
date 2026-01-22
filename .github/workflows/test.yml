@@ -41,7 +41,7 @@ jobs:
             -p 8546:8546 \
             -p 8547:8547 \
             -p 30303:30303 \
-            hyperledger/besu:latest
+            hyperledger/besu:25.11.0
       - name: Start Explorer service
         run: |
             docker run -d \

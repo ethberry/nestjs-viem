@@ -9,7 +9,7 @@ services:
   besu:
     container_name: besu
     restart: "on-failure"
-    image: hyperledger/besu:latest
+    image: hyperledger/besu:25.11.0
     environment:
       BESU_GENESIS_FILE: /var/lib/besu/genesis.json
       BESU_DATA_PATH: /var/lib/besu
