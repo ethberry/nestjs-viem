@@ -21,6 +21,7 @@ services:
       BESU_RPC_HTTP_CORS_ORIGINS: "*"
       BESU_RPC_HTTP_API: "ADMIN,ETH,NET,WEB3,IBFT"
       BESU_RPC_WS_API: "ADMIN,ETH,NET,WEB3,IBFT"
+      BESU_NODE_PRIVATE_KEY_FILE: /var/lib/besu/key
     volumes:
       - ${BASE_PATH}/besu:/var/lib/besu/data
       - ${BASE_PATH}/genesis.json:/var/lib/besu/genesis.json

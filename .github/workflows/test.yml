@@ -33,6 +33,7 @@ jobs:
             -e BESU_RPC_HTTP_CORS_ORIGINS="*" \
             -e BESU_RPC_HTTP_API="ADMIN,ETH,NET,WEB3,IBFT" \
             -e BESU_RPC_WS_API="ADMIN,ETH,NET,WEB3,IBFT" \
+            -e BESU_NODE_PRIVATE_KEY_FILE=/var/lib/besu/key \
             -v ${{ github.workspace }}/besu:/var/lib/besu/data \
             -v ${{ github.workspace }}/genesis.json:/var/lib/besu/genesis.json \
             -v ${{ github.workspace }}/key:/var/lib/besu/key \
