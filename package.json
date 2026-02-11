@@ -10,7 +10,7 @@
   "dependencies": {
     "@golevelup/nestjs-discovery": "6.1.2",
     "abitype": "1.2.3",
-    "cron": "4.3.5"
+    "cron": "4.4.0"
   },
   "description": "Viem transport for NestJS",
   "devDependencies": {
