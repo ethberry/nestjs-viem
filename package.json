@@ -41,9 +41,16 @@
   "engines": {
     "node": ">=22"
   },
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "keywords": [],
   "license": "UNLICENSED",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
   "name": "@ethberry/nestjs-viem",
   "peerDependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -69,6 +76,7 @@
     "test": "cross-env NODE_ENV=${NODE_ENV:=test} jest --detectOpenHandles --runInBand --forceExit"
   },
   "title": "NestJS Viem module",
+  "type": "module",
   "types": "./dist/index.d.ts",
   "version": "1.0.0"
 }
