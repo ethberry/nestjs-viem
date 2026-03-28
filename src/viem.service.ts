@@ -1,4 +1,5 @@
-import { Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import type { LoggerService } from "@nestjs/common";
 import { MessageHandler } from "@nestjs/microservices";
 import { transformPatternToRoute } from "@nestjs/microservices/utils";
 import { PATTERN_METADATA } from "@nestjs/microservices/constants";
@@ -7,12 +8,13 @@ import { CronJob } from "cron";
 import { EMPTY, from, Observable, Subject } from "rxjs";
 import { mergeAll, mergeMap } from "rxjs/operators";
 import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
-import { decodeEventLog, Hash, PublicClient } from "viem";
+import { decodeEventLog, Hash } from "viem";
+import type { PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events";
 import { VIEM_CLIENT } from "./viem.constants";
 import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition";
-import { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
+import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
 
 @Injectable()
 export class ViemService {
