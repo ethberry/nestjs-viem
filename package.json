@@ -60,6 +60,7 @@
     "@nestjs/schedule": "^6.0.0",
     "rxjs": "^7.0.0"
   },
+  "private": false,
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com/"

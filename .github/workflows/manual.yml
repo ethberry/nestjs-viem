@@ -22,7 +22,7 @@ jobs:
       - name: Build Packages
         run: npm run build
 
-      - name: Authenticate Registry & Configure Git User
+      - name: Authenticate GitHub Packages & Configure Git User
         run: |
           echo "@ethberry:registry=https://npm.pkg.github.com/" >> .npmrc
           echo "//npm.pkg.github.com/:_authToken=$GITHUBTOKEN" >> .npmrc
@@ -35,19 +35,20 @@ jobs:
           GITHUBUSER: ${{ secrets.GITHUBUSER }}
           GITHUBEMAIL: ${{ secrets.GITHUBEMAIL }}
 
-      - name: Authenticate check via npm GIT
+      - name: Authenticate GitHub Packages via npm
         run: npm whoami --registry=https://npm.pkg.github.com/
 
       - name: Version by NPM
         run: npm version patch -m "[Manual release] [skip ci] %s"
 
-      - uses: JS-DevTools/npm-publish@v4
+      - name: Publish to GitHub Packages
+        uses: JS-DevTools/npm-publish@v4
         with:
           token: ${{ secrets.GITHUBTOKEN }}
           registry: "https://npm.pkg.github.com"
           ignore-scripts: true
 
-      - name: Authenticate Registry & Configure Git User
+      - name: Authenticate NPM Registry & Configure Git User
         run: |
           echo "@ethberry:registry=https://registry.npmjs.org/" >> .npmrc
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
@@ -61,10 +62,11 @@ jobs:
           NPM_USER: ${{ secrets.NPM_USER }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Authenticate check via npm NPM
+      - name: Authenticate NPM Registry via npm
         run: npm whoami --registry=https://registry.npmjs.org/
 
-      - uses: JS-DevTools/npm-publish@v4
+      - name: Publish to NPM
+        uses: JS-DevTools/npm-publish@v4
         with:
           access: public
           registry: "https://registry.npmjs.org"
