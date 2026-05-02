@@ -18,6 +18,5 @@
       }
     ]
   },
-  "transformIgnorePatterns": ["node_modules/(?!(uuid)/)"],
   "verbose": true
 }
