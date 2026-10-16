@@ -3,20 +3,12 @@
   "collectCoverageFrom": ["src/**/*.{js,jsx,ts,tsx}"],
   "coverageDirectory": "../coverage",
   "moduleFileExtensions": ["js", "jsx", "ts", "tsx", "json"],
-  "moduleNameMapper": {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
-  },
-  "preset": "ts-jest/presets/default-esm",
+  "preset": "ts-jest",
   "rootDir": "src",
   "testEnvironment": "node",
   "testMatch": ["**/*.spec.ts"],
   "transform": {
-    "^.+\\.[tj]sx?$": [
-      "ts-jest",
-      {
-        "useESM": true
-      }
-    ]
+    "^.+\\.[tj]sx?$": "ts-jest"
   },
   "verbose": true
 }

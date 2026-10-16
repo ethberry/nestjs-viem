@@ -78,7 +78,6 @@
     "test": "cross-env NODE_ENV=${NODE_ENV:=test} jest --detectOpenHandles --runInBand --forceExit"
   },
   "title": "NestJS Viem module",
-  "type": "module",
   "types": "./dist/index.d.ts",
   "version": "1.0.2"
 }
