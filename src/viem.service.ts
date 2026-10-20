@@ -74,8 +74,9 @@ export class ViemService {
   }
 
   public async listen(): Promise<void> {
+    const handlers = await this.blockHandlers();
     // wait while the system is configured
-    if (!this.registry.length && !(await this.blockHandlers()).length) {
+    if (!this.registry.length && !handlers.length) {
       return;
     }
 
@@ -237,7 +238,8 @@ export class ViemService {
   }
 
   private async emitBlock(blockNumber: bigint): Promise<void> {
-    if (!(await this.blockHandlers()).length) {
+    const handlers = await this.blockHandlers();
+    if (!handlers.length) {
       return;
     }
 

@@ -1,55 +1,61 @@
-import type { LoggerService } from "@nestjs/common";
+import { Controller, Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { Test, TestingModule } from "@nestjs/testing";
+import { Ctx, EventPattern, Payload } from "@nestjs/microservices";
 import { CronExpression, SchedulerRegistry } from "@nestjs/schedule";
-import type { DiscoveryService } from "@golevelup/nestjs-discovery";
-import type { PublicClient } from "viem";
 
 import type { IBlockEvent, ILogEvent, IViemModuleOptions } from "./interfaces";
-import { BLOCK_EVENT } from "./viem.constants";
+import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants";
+import { ViemModule } from "./viem.module";
 import { ViemService } from "./viem.service";
+
+@Controller()
+class BlockController {
+  public readonly seen: Array<{ event: ILogEvent<IBlockEvent>; ctx: IBlockEvent }> = [];
+
+  @EventPattern({ eventName: BLOCK_EVENT })
+  public onBlock(@Payload() event: ILogEvent<IBlockEvent>, @Ctx() ctx: IBlockEvent): void {
+    this.seen.push({ event, ctx });
+  }
+}
 
 function moduleOptions(fromBlock: bigint, latency: bigint): IViemModuleOptions {
   return {
     fromBlock,
     latency,
     debug: false,
-    cron: CronExpression.EVERY_SECOND,
+    cron: CronExpression.EVERY_YEAR,
   };
 }
 
-function createService(
-  client: PublicClient,
-  methods: Array<unknown>,
+function testModule(options: IViemModuleOptions, controllers: Array<typeof BlockController>) {
+  @Module({
+    imports: [ViemModule.register(options)],
+    controllers,
+  })
+  class TestViemModule {}
+
+  return TestViemModule;
+}
+
+async function createModule(
+  client: { getBlockNumber: jest.Mock; getLogs: jest.Mock },
   options: IViemModuleOptions,
-): ViemService {
-  const discovery = {
-    controllerMethodsWithMetaAtKey: (): Promise<Array<unknown>> => Promise.resolve(methods),
-  };
+  controllers: Array<typeof BlockController> = [],
+): Promise<TestingModule> {
+  const moduleRef = await Test.createTestingModule({
+    imports: [ConfigModule.forRoot(), testModule(options, controllers)],
+  })
+    .overrideProvider(VIEM_CLIENT)
+    .useValue(client)
+    .compile();
 
-  return new ViemService(
-    { log: () => undefined, error: () => undefined } as unknown as LoggerService,
-    client,
-    discovery as unknown as DiscoveryService,
-    options,
-    {} as SchedulerRegistry,
-  );
-}
-
-function blockMethod(seen: Array<{ event: ILogEvent<IBlockEvent>; ctx: IBlockEvent }>): {
-  meta: Array<{ eventName: string }>;
-  discoveredMethod: {
-    handler: (event: ILogEvent<IBlockEvent>, ctx: IBlockEvent) => void;
-    parentClass: { instance: Record<string, never> };
-  };
-} {
-  return {
-    meta: [{ eventName: BLOCK_EVENT }],
-    discoveredMethod: {
-      handler(event: ILogEvent<IBlockEvent>, ctx: IBlockEvent): void {
-        seen.push({ event, ctx });
-      },
-      parentClass: { instance: {} },
-    },
-  };
+  await moduleRef.init();
+  moduleRef
+    .get(SchedulerRegistry)
+    .getCronJobs()
+    .forEach(job => job.stop());
+  return moduleRef;
 }
 
 async function drain(ready: () => boolean): Promise<void> {
@@ -59,36 +65,32 @@ async function drain(ready: () => boolean): Promise<void> {
 }
 
 describe("block events", function () {
-  const services: Array<ViemService> = [];
+  const modules: Array<TestingModule> = [];
 
-  afterEach(function () {
-    services.splice(0).forEach(service => service.destroy());
+  afterEach(async function () {
+    await Promise.all(modules.splice(0).map(moduleRef => moduleRef.close()));
   });
 
   it("should keep the cursor when nobody listens for blocks", async function () {
     const getBlockNumber = jest.fn();
     const options = moduleOptions(4n, 0n);
-    const service = createService({ getBlockNumber, getLogs: jest.fn() } as unknown as PublicClient, [], options);
-    services.push(service);
+    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn() }, options);
+    modules.push(moduleRef);
 
-    await service.listen();
+    await moduleRef.get(ViemService).listen();
 
     expect(getBlockNumber).not.toHaveBeenCalled();
     expect(options.fromBlock).toBe(4n);
   });
 
   it("should emit the fresh head and keep the log cursor behind latency", async function () {
-    const seen: Array<{ event: ILogEvent<IBlockEvent>; ctx: IBlockEvent }> = [];
     const getBlockNumber = jest.fn().mockResolvedValueOnce(10n).mockResolvedValueOnce(11n);
     const options = moduleOptions(7n, 2n);
-    const service = createService(
-      { getBlockNumber, getLogs: jest.fn() } as unknown as PublicClient,
-      [blockMethod(seen)],
-      options,
-    );
-    services.push(service);
+    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn() }, options, [BlockController]);
+    modules.push(moduleRef);
+    const seen = moduleRef.get(BlockController).seen;
 
-    await service.listen();
+    await moduleRef.get(ViemService).listen();
     await drain(() => seen.length === 1);
 
     expect(seen.map(item => item.event.args.blockNumber)).toEqual([10n]);
@@ -96,7 +98,7 @@ describe("block events", function () {
     expect(seen.map(item => item.ctx.blockNumber)).toEqual([10n]);
     expect(options.fromBlock).toBe(9n);
 
-    await service.listen();
+    await moduleRef.get(ViemService).listen();
     await drain(() => seen.length === 2);
 
     expect(seen.map(item => item.event.args.blockNumber)).toEqual([10n, 11n]);
@@ -107,8 +109,9 @@ describe("block events", function () {
     const getLogs = jest.fn().mockResolvedValue([]);
     const getBlockNumber = jest.fn().mockResolvedValue(5n);
     const options = moduleOptions(5n, 0n);
-    const service = createService({ getBlockNumber, getLogs } as unknown as PublicClient, [], options);
-    services.push(service);
+    const moduleRef = await createModule({ getBlockNumber, getLogs }, options);
+    modules.push(moduleRef);
+    const service = moduleRef.get(ViemService);
     service.updateRegistry({
       contractType: "ERC20_TOKEN",
       contractAddress: ["0x0000000000000000000000000000000000000001"],
