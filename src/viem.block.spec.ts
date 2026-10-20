@@ -24,7 +24,7 @@ function moduleOptions(fromBlock: bigint, latency: bigint): IViemModuleOptions {
     fromBlock,
     latency,
     debug: false,
-    cron: CronExpression.EVERY_YEAR,
+    cron: CronExpression.EVERY_SECOND,
   };
 }
 
