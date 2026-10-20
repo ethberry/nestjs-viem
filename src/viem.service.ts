@@ -75,16 +75,14 @@ export class ViemService {
 
   public async listen(): Promise<void> {
     // wait while the system is configured
-    if (!(await this.isConfigured())) {
+    if (!this.registry.length && !(await this.blockHandlers()).length) {
       return;
     }
 
     const head = await this.getLastBlock();
-    const coveredHead = this.toBlock + this.options.latency;
+    await this.emitBlock(head);
+
     this.toBlock = head - this.options.latency;
-    if (head > coveredHead) {
-      await this.emitBlock(head);
-    }
     // waiting for confirmation
     if (this.options.fromBlock > this.toBlock) {
       return;
@@ -224,14 +222,6 @@ export class ViemService {
 
   public destroy(): void {
     this.subject.complete();
-  }
-
-  private async isConfigured(): Promise<boolean> {
-    if (this.registry.length) {
-      return true;
-    }
-
-    return (await this.blockHandlers()).length > 0;
   }
 
   private async collectLogs(): Promise<void> {
