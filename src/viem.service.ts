@@ -12,9 +12,11 @@ import { decodeEventLog, Hash } from "viem";
 import type { PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events";
-import { VIEM_CLIENT } from "./viem.constants";
+import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants";
 import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition";
 import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
+
+const blockPattern = { eventName: BLOCK_EVENT };
 
 @Injectable()
 export class ViemService {
@@ -72,23 +74,22 @@ export class ViemService {
   }
 
   public async listen(): Promise<void> {
+    const handlers = await this.blockHandlers();
     // wait while the system is configured
-    if (!this.registry.length) {
+    if (!this.registry.length && !handlers.length) {
       return;
     }
 
-    this.toBlock = (await this.getLastBlock()) - this.options.latency;
+    const head = await this.getLastBlock();
+    await this.emitBlock(head);
+
+    this.toBlock = head - this.options.latency;
     // waiting for confirmation
     if (this.options.fromBlock > this.toBlock) {
       return;
     }
 
-    this.loggerService.log(
-      `getPastEvents No: ${this.options.fromBlock} - ${this.toBlock}`,
-      `${ViemService.name}-${this.instanceId}`,
-    );
-
-    await this.getPastEvents(this.registry, this.options.fromBlock, this.toBlock, this.options.chunkSize);
+    await this.collectLogs();
     this.options.fromBlock = this.toBlock + 1n;
   }
 
@@ -222,5 +223,38 @@ export class ViemService {
 
   public destroy(): void {
     this.subject.complete();
+  }
+
+  private async collectLogs(): Promise<void> {
+    if (!this.registry.length) {
+      return;
+    }
+
+    this.loggerService.log(
+      `getPastEvents No: ${this.options.fromBlock} - ${this.toBlock}`,
+      `${ViemService.name}-${this.instanceId}`,
+    );
+    await this.getPastEvents(this.registry, this.options.fromBlock, this.toBlock, this.options.chunkSize);
+  }
+
+  private async emitBlock(blockNumber: bigint): Promise<void> {
+    const handlers = await this.blockHandlers();
+    if (!handlers.length) {
+      return;
+    }
+
+    const args = { blockNumber };
+    this.subject.next({
+      pattern: blockPattern,
+      description: {
+        name: BLOCK_EVENT,
+        args,
+      },
+      log: args,
+    });
+  }
+
+  private blockHandlers() {
+    return this.getHandlerByPattern(transformPatternToRoute(blockPattern));
   }
 }
