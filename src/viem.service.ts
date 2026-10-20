@@ -12,15 +12,18 @@ import { decodeEventLog, Hash } from "viem";
 import type { PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events";
-import { VIEM_CLIENT } from "./viem.constants";
+import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants";
 import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition";
 import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
+
+const blockPattern = { eventName: BLOCK_EVENT };
 
 @Injectable()
 export class ViemService {
   private instanceId: string;
   private cronLock = false;
   private toBlock = 0n;
+  private emittedHead?: bigint;
   private registry: Array<IContractOptions> = [];
   private subject = new Subject<any>();
 
@@ -73,22 +76,20 @@ export class ViemService {
 
   public async listen(): Promise<void> {
     // wait while the system is configured
-    if (!this.registry.length) {
+    if (!(await this.isConfigured())) {
       return;
     }
 
-    this.toBlock = (await this.getLastBlock()) - this.options.latency;
+    const head = await this.getLastBlock();
+    await this.emitFreshBlocks(head);
+
+    this.toBlock = head - this.options.latency;
     // waiting for confirmation
     if (this.options.fromBlock > this.toBlock) {
       return;
     }
 
-    this.loggerService.log(
-      `getPastEvents No: ${this.options.fromBlock} - ${this.toBlock}`,
-      `${ViemService.name}-${this.instanceId}`,
-    );
-
-    await this.getPastEvents(this.registry, this.options.fromBlock, this.toBlock, this.options.chunkSize);
+    await this.collectLogs();
     this.options.fromBlock = this.toBlock + 1n;
   }
 
@@ -222,5 +223,53 @@ export class ViemService {
 
   public destroy(): void {
     this.subject.complete();
+  }
+
+  private async isConfigured(): Promise<boolean> {
+    if (this.registry.length) {
+      return true;
+    }
+
+    return (await this.blockHandlers()).length > 0;
+  }
+
+  private async collectLogs(): Promise<void> {
+    if (!this.registry.length) {
+      return;
+    }
+
+    this.loggerService.log(
+      `getPastEvents No: ${this.options.fromBlock} - ${this.toBlock}`,
+      `${ViemService.name}-${this.instanceId}`,
+    );
+    await this.getPastEvents(this.registry, this.options.fromBlock, this.toBlock, this.options.chunkSize);
+  }
+
+  private async emitFreshBlocks(head: bigint): Promise<void> {
+    if (!(await this.blockHandlers()).length) {
+      return;
+    }
+
+    const fromBlock = this.emittedHead === undefined ? head : this.emittedHead + 1n;
+    if (fromBlock > head) {
+      return;
+    }
+
+    for (let blockNumber = fromBlock; blockNumber <= head; blockNumber++) {
+      const args = { blockNumber };
+      this.subject.next({
+        pattern: blockPattern,
+        description: {
+          name: BLOCK_EVENT,
+          args,
+        },
+        log: args,
+      });
+    }
+    this.emittedHead = head;
+  }
+
+  private blockHandlers() {
+    return this.getHandlerByPattern(transformPatternToRoute(blockPattern));
   }
 }
