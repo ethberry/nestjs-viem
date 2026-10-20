@@ -79,7 +79,7 @@ describe("block events", function () {
 
   it("should emit the fresh head and keep the log cursor behind latency", async function () {
     const seen: Array<{ event: ILogEvent<IBlockEvent>; ctx: IBlockEvent }> = [];
-    const getBlockNumber = jest.fn().mockResolvedValueOnce(10n).mockResolvedValueOnce(12n);
+    const getBlockNumber = jest.fn().mockResolvedValueOnce(10n).mockResolvedValueOnce(10n).mockResolvedValueOnce(11n);
     const options = moduleOptions(7n, 2n);
     const service = createService(
       { getBlockNumber, getLogs: jest.fn() } as unknown as PublicClient,
@@ -97,10 +97,16 @@ describe("block events", function () {
     expect(options.fromBlock).toBe(9n);
 
     await service.listen();
-    await drain(() => seen.length === 3);
+    await drain(() => seen.length > 1);
 
-    expect(seen.map(item => item.event.args.blockNumber)).toEqual([10n, 11n, 12n]);
-    expect(options.fromBlock).toBe(11n);
+    expect(seen).toHaveLength(1);
+    expect(options.fromBlock).toBe(9n);
+
+    await service.listen();
+    await drain(() => seen.length === 2);
+
+    expect(seen.map(item => item.event.args.blockNumber)).toEqual([10n, 11n]);
+    expect(options.fromBlock).toBe(10n);
   });
 
   it("should keep scanning contracts when no block handler is registered", async function () {

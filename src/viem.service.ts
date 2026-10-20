@@ -23,7 +23,6 @@ export class ViemService {
   private instanceId: string;
   private cronLock = false;
   private toBlock = 0n;
-  private emittedHead?: bigint;
   private registry: Array<IContractOptions> = [];
   private subject = new Subject<any>();
 
@@ -81,9 +80,11 @@ export class ViemService {
     }
 
     const head = await this.getLastBlock();
-    await this.emitFreshBlocks(head);
-
+    const coveredHead = this.toBlock + this.options.latency;
     this.toBlock = head - this.options.latency;
+    if (head > coveredHead) {
+      await this.emitBlock(head);
+    }
     // waiting for confirmation
     if (this.options.fromBlock > this.toBlock) {
       return;
@@ -245,28 +246,20 @@ export class ViemService {
     await this.getPastEvents(this.registry, this.options.fromBlock, this.toBlock, this.options.chunkSize);
   }
 
-  private async emitFreshBlocks(head: bigint): Promise<void> {
+  private async emitBlock(blockNumber: bigint): Promise<void> {
     if (!(await this.blockHandlers()).length) {
       return;
     }
 
-    const fromBlock = this.emittedHead === undefined ? head : this.emittedHead + 1n;
-    if (fromBlock > head) {
-      return;
-    }
-
-    for (let blockNumber = fromBlock; blockNumber <= head; blockNumber++) {
-      const args = { blockNumber };
-      this.subject.next({
-        pattern: blockPattern,
-        description: {
-          name: BLOCK_EVENT,
-          args,
-        },
-        log: args,
-      });
-    }
-    this.emittedHead = head;
+    const args = { blockNumber };
+    this.subject.next({
+      pattern: blockPattern,
+      description: {
+        name: BLOCK_EVENT,
+        args,
+      },
+      log: args,
+    });
   }
 
   private blockHandlers() {
