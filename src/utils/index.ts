@@ -1,2 +1,2 @@
-export * from "./await-for-confirmation";
-export * from "./patch-bigint";
+export * from "./await-for-confirmation.js";
+export * from "./patch-bigint.js";

@@ -1,12 +1,12 @@
 import { ConfigService } from "@nestjs/config";
-import { defineChain } from "viem";
+import { defineChain, type Chain } from "viem";
 
 export const CHAIN_PROVIDER = Symbol("CHAIN_PROVIDER");
 
 export const chainProvider = {
   provide: CHAIN_PROVIDER,
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => {
+  useFactory: (configService: ConfigService): Chain => {
     const rpcUrl = configService.get<string>("RPC_URL", "http://localhost:8545/");
     const chainId = configService.get<string>("CHAIN_ID", "1");
 

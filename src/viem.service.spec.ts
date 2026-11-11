@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { Controller, Injectable, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { Test } from "@nestjs/testing";
@@ -9,13 +10,13 @@ import type { Hash, Log } from "viem";
 import { createPublicClient, createWalletClient, defineChain, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 
-import { patchBigInt, waitForConfirmation } from "./utils";
-import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
-import { ViemModule } from "./viem.module";
-import { ViemService } from "./viem.service";
-import Erc20Contract from "./contracts/ERC20Ownable.json";
-import Erc721Contract from "./contracts/ERC721Ownable.json";
-import ExchangeContract from "./contracts/Exchange.json";
+import { patchBigInt, waitForConfirmation } from "./utils/index.js";
+import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces/index.js";
+import { ViemModule } from "./viem.module.js";
+import { ViemService } from "./viem.service.js";
+import Erc20Contract from "./contracts/ERC20Ownable.json" with { type: "json" };
+import Erc721Contract from "./contracts/ERC721Ownable.json" with { type: "json" };
+import ExchangeContract from "./contracts/Exchange.json" with { type: "json" };
 
 interface IExchangeItem {
   account: string;
@@ -205,7 +206,7 @@ describe("ViemServer", function () {
   // https://github.com/facebook/jest/issues/11543
   jest.setTimeout(100000);
 
-  let logSpyContract: jest.SpyInstance;
+  let logSpyContract: jest.Spied<any>;
 
   let testViemService: TestViemService;
 
