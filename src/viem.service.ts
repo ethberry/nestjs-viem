@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { LoggerService } from "@nestjs/common";
+import { DiscoveryService, MetadataScanner, Reflector } from "@nestjs/core";
 import { MessageHandler } from "@nestjs/microservices";
 import { transformPatternToRoute } from "@nestjs/microservices/utils/index.js";
 import { PATTERN_METADATA } from "@nestjs/microservices/constants";
@@ -7,14 +8,13 @@ import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
 import { EMPTY, from, Observable, Subject } from "rxjs";
 import { mergeAll, mergeMap } from "rxjs/operators";
-import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-discovery";
 import { decodeEventLog, Hash } from "viem";
 import type { PublicClient } from "viem";
 
 import { getPastEvents } from "./utils/get-past-events.js";
 import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants.js";
 import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition.js";
-import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces/index.js";
+import type { IContractOptions, IDiscoveredHandler, ILogEvent, IViemModuleOptions } from "./interfaces/index.js";
 
 const blockPattern = { eventName: BLOCK_EVENT };
 
@@ -32,6 +32,8 @@ export class ViemService {
     @Inject(VIEM_CLIENT)
     protected readonly client: PublicClient,
     protected readonly discoveryService: DiscoveryService,
+    protected readonly metadataScanner: MetadataScanner,
+    protected readonly reflector: Reflector,
     @Inject(MODULE_OPTIONS_TOKEN)
     protected options: IViemModuleOptions,
     protected schedulerRegistry: SchedulerRegistry,
@@ -177,13 +179,32 @@ export class ViemService {
     });
   }
 
-  protected async getHandlerByPattern<T extends Array<Record<string, string>>>(
+  protected getHandlerByPattern<T extends Array<Record<string, string>>>(
     route: string,
-  ): Promise<Array<DiscoveredMethodWithMeta<T>>> {
-    const methods = await this.discoveryService.controllerMethodsWithMetaAtKey<T>(PATTERN_METADATA);
-    return methods.filter(method => {
-      return method.meta.some(meta => transformPatternToRoute(meta) === route);
-    });
+  ): Promise<Array<IDiscoveredHandler<T>>> {
+    const methods: Array<IDiscoveredHandler<T>> = [];
+    for (const wrapper of this.discoveryService.getControllers()) {
+      const instance: unknown = wrapper.instance;
+      if (!instance || typeof instance !== "object") {
+        continue;
+      }
+      const prototype = Object.getPrototypeOf(instance) as Record<string, unknown>;
+      for (const methodName of this.metadataScanner.getAllMethodNames(prototype)) {
+        const handler = prototype[methodName];
+        if (typeof handler !== "function") {
+          continue;
+        }
+        const meta = this.reflector.get<T | undefined>(PATTERN_METADATA, handler);
+        if (meta) {
+          methods.push({ meta, methodName, handler: handler as IDiscoveredHandler<T>["handler"], instance });
+        }
+      }
+    }
+    return Promise.resolve(
+      methods.filter(method => {
+        return method.meta.some(meta => transformPatternToRoute(meta) === route);
+      }),
+    );
   }
 
   protected async call(
@@ -201,11 +222,10 @@ export class ViemService {
 
     return Promise.allSettled(
       discoveredMethodsWithMeta.map(discoveredMethodWithMeta => {
-        return (
-          discoveredMethodWithMeta.discoveredMethod.handler.bind(
-            discoveredMethodWithMeta.discoveredMethod.parentClass.instance,
-          ) as MessageHandler
-        )(description, context);
+        return (discoveredMethodWithMeta.handler.bind(discoveredMethodWithMeta.instance) as MessageHandler)(
+          description,
+          context,
+        );
       }),
     ).then(res => {
       res.forEach(r => {
