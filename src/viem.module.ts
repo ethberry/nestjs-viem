@@ -1,7 +1,7 @@
 import { Logger, Module, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { DiscoveryModule } from "@nestjs/core";
 import { ScheduleModule } from "@nestjs/schedule";
-import { DiscoveryModule } from "@golevelup/nestjs-discovery";
 
 import { chainProvider, viemHttpClientProvider } from "./providers/index.js";
 import { ViemService } from "./viem.service.js";

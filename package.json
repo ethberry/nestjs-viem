@@ -8,7 +8,6 @@
     "url": "https://github.com/ethberry/nestjs-viem/issues"
   },
   "dependencies": {
-    "@golevelup/nestjs-discovery": "7.1.0",
     "abitype": "1.3.0",
     "cron": "4.4.0"
   },
