@@ -1,13 +1,14 @@
+import { jest } from "@jest/globals";
 import { Controller, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { Test, TestingModule } from "@nestjs/testing";
 import { Ctx, EventPattern, Payload } from "@nestjs/microservices";
 import { CronExpression, SchedulerRegistry } from "@nestjs/schedule";
 
-import type { IBlockEvent, ILogEvent, IViemModuleOptions } from "./interfaces";
-import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants";
-import { ViemModule } from "./viem.module";
-import { ViemService } from "./viem.service";
+import type { IBlockEvent, ILogEvent, IViemModuleOptions } from "./interfaces/index.js";
+import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants.js";
+import { ViemModule } from "./viem.module.js";
+import { ViemService } from "./viem.service.js";
 
 @Controller()
 class BlockController {
@@ -72,9 +73,9 @@ describe("block events", function () {
   });
 
   it("should keep the cursor when nobody listens for blocks", async function () {
-    const getBlockNumber = jest.fn();
+    const getBlockNumber = jest.fn<(...args: any[]) => any>();
     const options = moduleOptions(4n, 0n);
-    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn() }, options);
+    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn<(...args: any[]) => any>() }, options);
     modules.push(moduleRef);
 
     await moduleRef.get(ViemService).listen();
@@ -84,9 +85,11 @@ describe("block events", function () {
   });
 
   it("should emit the fresh head and keep the log cursor behind latency", async function () {
-    const getBlockNumber = jest.fn().mockResolvedValueOnce(10n).mockResolvedValueOnce(11n);
+    const getBlockNumber = jest.fn<(...args: any[]) => any>().mockResolvedValueOnce(10n).mockResolvedValueOnce(11n);
     const options = moduleOptions(7n, 2n);
-    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn() }, options, [BlockController]);
+    const moduleRef = await createModule({ getBlockNumber, getLogs: jest.fn<(...args: any[]) => any>() }, options, [
+      BlockController,
+    ]);
     modules.push(moduleRef);
     const seen = moduleRef.get(BlockController).seen;
 
@@ -106,8 +109,8 @@ describe("block events", function () {
   });
 
   it("should keep scanning contracts when no block handler is registered", async function () {
-    const getLogs = jest.fn().mockResolvedValue([]);
-    const getBlockNumber = jest.fn().mockResolvedValue(5n);
+    const getLogs = jest.fn<(...args: any[]) => any>().mockResolvedValue([]);
+    const getBlockNumber = jest.fn<(...args: any[]) => any>().mockResolvedValue(5n);
     const options = moduleOptions(5n, 0n);
     const moduleRef = await createModule({ getBlockNumber, getLogs }, options);
     modules.push(moduleRef);

@@ -2,7 +2,7 @@ import { ConfigService } from "@nestjs/config";
 import { privateKeyToAccount } from "viem/accounts";
 import { Hash } from "viem";
 
-import { VIEM_ACCOUNT } from "../viem.constants";
+import { VIEM_ACCOUNT } from "../viem.constants.js";
 
 export const viemAccountProvider = {
   provide: VIEM_ACCOUNT,

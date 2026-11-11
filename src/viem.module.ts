@@ -3,9 +3,9 @@ import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { DiscoveryModule } from "@golevelup/nestjs-discovery";
 
-import { chainProvider, viemHttpClientProvider } from "./providers";
-import { ViemService } from "./viem.service";
-import { ConfigurableModuleClass } from "./viem.module-definition";
+import { chainProvider, viemHttpClientProvider } from "./providers/index.js";
+import { ViemService } from "./viem.service.js";
+import { ConfigurableModuleClass } from "./viem.module-definition.js";
 
 @Module({
   imports: [ConfigModule, DiscoveryModule, ScheduleModule.forRoot()],

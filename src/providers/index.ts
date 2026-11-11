@@ -1,3 +1,3 @@
-export * from "./account";
-export * from "./chain";
-export * from "./client";
+export * from "./account.js";
+export * from "./chain.js";
+export * from "./client.js";

@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type { LoggerService } from "@nestjs/common";
 import { MessageHandler } from "@nestjs/microservices";
-import { transformPatternToRoute } from "@nestjs/microservices/utils";
+import { transformPatternToRoute } from "@nestjs/microservices/utils/index.js";
 import { PATTERN_METADATA } from "@nestjs/microservices/constants";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
@@ -11,10 +11,10 @@ import { DiscoveredMethodWithMeta, DiscoveryService } from "@golevelup/nestjs-di
 import { decodeEventLog, Hash } from "viem";
 import type { PublicClient } from "viem";
 
-import { getPastEvents } from "./utils/get-past-events";
-import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants";
-import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition";
-import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces";
+import { getPastEvents } from "./utils/get-past-events.js";
+import { BLOCK_EVENT, VIEM_CLIENT } from "./viem.constants.js";
+import { MODULE_OPTIONS_TOKEN } from "./viem.module-definition.js";
+import type { IContractOptions, ILogEvent, IViemModuleOptions } from "./interfaces/index.js";
 
 const blockPattern = { eventName: BLOCK_EVENT };
 
