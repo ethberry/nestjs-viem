@@ -73,6 +73,15 @@ export enum ContractType {
 config();
 patchBigInt();
 
+// the test chain's address comes from the env (.env.test); a missing one fails here, not deep in viem
+const requiredEnv = (name: string): string => {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} is not set`);
+  }
+  return value;
+};
+
 const AMOUNT = 10000000n;
 const TOKEN_ID = 1n;
 
@@ -84,7 +93,7 @@ class TestViemService {
     return this.viemService.updateRegistry(contract);
   }
 
-  public getRegistry(): Array<IContractOptions> {
+  public getRegistry(): IContractOptions[] {
     return this.viemService.getRegistry();
   }
 
@@ -241,7 +250,7 @@ describe("ViemServer", function () {
       },
       rpcUrls: {
         default: {
-          http: [process.env.JSON_RPC_ADDR],
+          http: [requiredEnv("JSON_RPC_ADDR")],
         },
       },
     });
@@ -359,7 +368,7 @@ describe("ViemServer", function () {
       eventSignatures: ["Swap((address,address,uint256),(address,address,uint256))"],
     });
 
-    await waitForConfirmation(publicClient, ~~process.env.LATENCY + 2);
+    await waitForConfirmation(publicClient, ~~(process.env.LATENCY ?? "1") + 2);
 
     expect(logSpyContract).toHaveBeenCalledTimes(10);
   });
