@@ -18,3 +18,20 @@
 .*
 
 **/*.spec.*
+
+# tests, stories and their configs are not published
+jest.config.*
+jest.setup.*
+jest.environment.*
+tsconfig.test.json
+tsconfig.jest.json
+**/*.test.*
+**/*.stories.*
+**/test-utils.*
+**/test-globals.d.ts
+**/setup-jest.*
+**/jest.setup.*
+**/__mocks__
+.storybook
+.env
+.env.*
