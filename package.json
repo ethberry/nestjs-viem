@@ -76,7 +76,8 @@
     "prebuild": "rimraf dist/",
     "prepare": "husky",
     "prettier": "prettier . --write",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules NODE_ENV=${NODE_ENV:=test} jest --detectOpenHandles --runInBand --forceExit"
+    "test": "npm run typecheck && cross-env NODE_OPTIONS=--experimental-vm-modules NODE_ENV=${NODE_ENV:=test} jest --detectOpenHandles --runInBand --forceExit",
+    "typecheck": "tsc -p tsconfig.test.json"
   },
   "title": "NestJS Viem module",
   "types": "./dist/index.d.ts",
